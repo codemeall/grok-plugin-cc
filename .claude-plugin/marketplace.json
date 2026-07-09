@@ -1,0 +1,17 @@
+{
+  "name": "grok-plugin-cc",
+  "owner": {
+    "name": "grok-plugin-cc contributors"
+  },
+  "plugins": [
+    {
+      "name": "grok",
+      "source": "./plugins/grok",
+      "description": "Delegate repository-aware review and implementation tasks to a local Grok Build CLI from Claude Code.",
+      "version": "0.2.0",
+      "author": {
+        "name": "grok-plugin-cc contributors"
+      }
+    }
+  ]
+}

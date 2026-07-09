@@ -1,0 +1,11 @@
+node_modules/
+.DS_Store
+*.log
+.tmp/
+.temp/
+coverage/
+.grok-plugin/
+*.pid
+.env
+.env.*
+!.env.example
