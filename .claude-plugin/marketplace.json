@@ -1,5 +1,6 @@
 {
   "name": "grok-plugin-cc",
+  "description": "Claude Code plugin marketplace for delegating repository-aware tasks to Grok Build.",
   "owner": {
     "name": "grok-plugin-cc contributors"
   },
