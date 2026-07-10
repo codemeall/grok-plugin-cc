@@ -17,6 +17,28 @@ function installFakeGrok(binDir) {
   return dest;
 }
 
+test('createJob persists effort flag', async () => {
+  const jobsDir = mkdtempSync(join(tmpdir(), 'grok-plugin-jobs-'));
+  const previous = process.env.GROK_PLUGIN_JOBS_DIR;
+  process.env.GROK_PLUGIN_JOBS_DIR = jobsDir;
+
+  try {
+    const job = await createJob({
+      mode: 'rescue',
+      repo: { root: '/tmp/repo' },
+      prompt: 'propose a fix',
+      task: 'propose a fix',
+      flags: { effort: 'medium', model: 'grok-4.5', readonly: true }
+    });
+    assert.equal(job.flags.effort, 'medium');
+    assert.equal(job.flags.readonly, true);
+    assert.equal((await readJob(job.id)).flags.effort, 'medium');
+  } finally {
+    if (previous === undefined) delete process.env.GROK_PLUGIN_JOBS_DIR;
+    else process.env.GROK_PLUGIN_JOBS_DIR = previous;
+  }
+});
+
 test('createJob persists flags and prompt file', async () => {
   const jobsDir = mkdtempSync(join(tmpdir(), 'grok-plugin-jobs-'));
   const previous = process.env.GROK_PLUGIN_JOBS_DIR;
@@ -37,7 +59,9 @@ test('createJob persists flags and prompt file', async () => {
       base: 'develop',
       resume: true,
       fresh: false,
-      model: 'grok-4.5'
+      model: 'grok-4.5',
+      effort: null,
+      readonly: false
     });
 
     const loaded = await readJob(job.id);

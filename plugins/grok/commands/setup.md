@@ -9,4 +9,4 @@ allowed-tools: Bash
 
 Run this command and report the status exactly. Do not invent install links.
 
-!`grok-companion setup`
+!`"${CLAUDE_PLUGIN_ROOT}/bin/grok-companion" setup`

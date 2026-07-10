@@ -60,7 +60,9 @@ export async function createJob({ mode, repo, prompt, task, flags = {} }) {
       base: flags.base || null,
       resume: Boolean(flags.resume),
       fresh: Boolean(flags.fresh),
-      model: flags.model || null
+      model: flags.model || null,
+      effort: flags.effort || null,
+      readonly: Boolean(flags.readonly)
     },
     progress: 'queued',
     logs: []

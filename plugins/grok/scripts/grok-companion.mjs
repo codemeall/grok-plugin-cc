@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { parseArgs, tokenizeArguments, usage } from './lib/args.mjs';
 import { gatherRepositoryContext } from './lib/context.mjs';
 import { detectRepository } from './lib/git.mjs';
-import { detectGrok, runGrokPromptAsync } from './lib/grok.mjs';
+import { detectGrok, headlessModeOptions, runGrokPromptAsync } from './lib/grok.mjs';
 import { commandExists } from './lib/process.mjs';
 import { buildPrompt } from './lib/prompts.mjs';
 import { extractPatch } from './lib/parser.mjs';
@@ -92,6 +92,8 @@ async function setup() {
     '- Install Grok Build: `curl -fsSL https://x.ai/cli/install.sh | bash` (Windows: `irm https://x.ai/cli/install.ps1 | iex`).',
     '- Authenticate with `grok login`, or set `XAI_API_KEY` for non-interactive environments.',
     '- Headless runs use `grok --prompt-file <path>` (long prompts) or `grok -p "..."` (short prompts).',
+    '- Reviews are read-only (`--tools read_file,grep,list_dir --sandbox read-only`).',
+    '- Rescue is write-capable by default (`--sandbox workspace --always-approve`); use `--readonly` to propose only.',
     `- If PATH \`grok\` is not Grok Build, set \`GROK_CLI=/absolute/path/to/grok\` (often \`~/.grok/bin/grok\`).`,
     `- Test this plugin locally with: \`claude --plugin-dir ${PLUGIN_ROOT}\``,
     `- Add this local marketplace with: \`/plugin marketplace add ${MARKETPLACE_ROOT}\``,
@@ -117,11 +119,13 @@ async function runMode(mode, parsed) {
       context.repo.error
     ].join('\n');
   }
+  const write = mode !== 'rescue' ? false : !parsed.flags.readonly;
   const prompt = buildPrompt(mode, context, {
     task: parsed.task,
     base,
     resume: parsed.flags.resume,
-    fresh: parsed.flags.fresh
+    fresh: parsed.flags.fresh,
+    write
   });
 
   if (parsed.flags.background) {
@@ -144,7 +148,9 @@ async function runMode(mode, parsed) {
         base,
         resume: Boolean(parsed.flags.resume),
         fresh: Boolean(parsed.flags.fresh),
-        model: parsed.flags.model || null
+        model: parsed.flags.model || null,
+        effort: parsed.flags.effort || null,
+        readonly: Boolean(parsed.flags.readonly)
       }
     });
     const started = await startJob(job, SCRIPT_PATH);
@@ -155,6 +161,7 @@ async function runMode(mode, parsed) {
       `Started Grok job: ${started.id}`,
       `Status: ${started.status}`,
       `PID: ${started.pid}`,
+      write ? 'Mode: write-capable (Grok may edit the repo)' : 'Mode: read-only / proposal-only',
       '',
       `Use /grok:status to monitor it.`,
       `Use /grok:result ${started.id} to inspect the output.`
@@ -176,7 +183,8 @@ async function runMode(mode, parsed) {
     resume: parsed.flags.resume,
     fresh: parsed.flags.fresh,
     model: parsed.flags.model,
-    ...headlessModeOptions(mode)
+    effort: parsed.flags.effort,
+    ...headlessModeOptions(mode, { write })
   });
   const patch = extractPatch(response.output);
   return renderExecutionResult(response.output, patch, response);
@@ -195,6 +203,7 @@ async function executeJob(jobId) {
     const prompt = await readFile(promptFile(jobId), 'utf8');
     await updateJob(jobId, { progress: 'running grok' });
     const flags = job.flags || {};
+    const write = job.mode === 'rescue' && !flags.readonly;
     const current = await readJob(jobId);
     if (current.status === 'cancelled') {
       return;
@@ -206,8 +215,9 @@ async function executeJob(jobId) {
       resume: flags.resume,
       fresh: flags.fresh,
       model: flags.model,
+      effort: flags.effort,
       sessionId: job.sessionId || undefined,
-      ...headlessModeOptions(job.mode)
+      ...headlessModeOptions(job.mode, { write })
     });
 
     const after = await readJob(jobId);
@@ -273,20 +283,6 @@ async function cancel(jobId) {
     progress: 'cancelled by user'
   });
   return `Cancelled Grok job ${jobId}.`;
-}
-
-/** Read-only review modes use an allowlist; rescue stays proposal-only (no --always-approve). */
-function headlessModeOptions(mode) {
-  if (mode === 'rescue') {
-    // Proposal-only: Claude inspects patches. Do not pass --always-approve.
-    return {
-      disallowedTools: 'Agent'
-    };
-  }
-
-  return {
-    tools: 'read_file,grep,list_dir'
-  };
 }
 
 function killJobProcess(pid) {

@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.2
+
+- Rescue is write-capable by default (`--sandbox workspace --always-approve`), matching Codex rescue `--write`.
+- Add `--readonly` for proposal-only rescue; reviews remain read-only.
+- Split write vs proposal rescue prompts.
+
+## 0.2.1
+
+- Make all modes proposal/read-only: `--tools read_file,grep,list_dir` plus `--sandbox read-only` (including rescue).
+- Add `--effort` passthrough to Grok headless runs; persist it on background jobs.
+- Point slash commands at `${CLAUDE_PLUGIN_ROOT}/bin/grok-companion`; document adversarial focus text.
+
 ## 0.2.0
 
 - Invoke official Grok Build headless mode via `--prompt-file` / `-p` (with `--no-auto-update`).

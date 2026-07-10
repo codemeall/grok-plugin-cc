@@ -11,7 +11,9 @@ test('parseArgs handles mode, value flags, boolean flags, and task text', () => 
     '--background',
     '--base',
     'develop',
-    '--wait'
+    '--wait',
+    '--effort',
+    'high'
   ]);
 
   assert.equal(parsed.command, 'rescue');
@@ -19,8 +21,28 @@ test('parseArgs handles mode, value flags, boolean flags, and task text', () => 
   assert.deepEqual(parsed.flags, {
     background: true,
     base: 'develop',
-    wait: true
+    wait: true,
+    effort: 'high'
   });
+});
+
+test('parseArgs accepts adversarial focus text as task', () => {
+  const parsed = parseArgs([
+    'adversarial-review',
+    '--base',
+    'main',
+    'challenge',
+    'caching'
+  ]);
+  assert.equal(parsed.task, 'challenge caching');
+  assert.equal(parsed.flags.base, 'main');
+});
+
+test('parseArgs accepts --readonly for rescue', () => {
+  const parsed = parseArgs(['rescue', 'diagnose', 'only', '--readonly', '--effort', 'low']);
+  assert.equal(parsed.task, 'diagnose only');
+  assert.equal(parsed.flags.readonly, true);
+  assert.equal(parsed.flags.effort, 'low');
 });
 
 test('parseArgs rejects missing value flags', () => {

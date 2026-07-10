@@ -8,6 +8,9 @@ import {
   ARG_MAX_SAFE,
   buildHeadlessArgs,
   detectGrok,
+  headlessModeOptions,
+  READ_ONLY_TOOLS,
+  WRITE_SANDBOX,
   runGrokPrompt,
   runGrokPromptAsync
 } from '../plugins/grok/scripts/lib/grok.mjs';
@@ -117,4 +120,49 @@ test('buildHeadlessArgs includes --tools when provided', () => {
   const args = buildHeadlessArgs('x', { tools: 'read_file,grep,list_dir' });
   assert.ok(args.includes('--tools'));
   assert.ok(args.includes('read_file,grep,list_dir'));
+});
+
+test('buildHeadlessArgs includes --sandbox and --effort when provided', () => {
+  const args = buildHeadlessArgs('x', {
+    sandbox: 'read-only',
+    effort: 'high',
+    model: 'grok-4.5'
+  });
+  assert.ok(args.includes('--sandbox'));
+  assert.ok(args.includes('read-only'));
+  assert.ok(args.includes('--effort'));
+  assert.ok(args.includes('high'));
+  assert.ok(args.includes('-m'));
+  assert.ok(args.includes('grok-4.5'));
+});
+
+test('headlessModeOptions keeps reviews read-only and rescue write-capable by default', () => {
+  for (const mode of ['review', 'adversarial-review']) {
+    const options = headlessModeOptions(mode);
+    assert.deepEqual(options, {
+      tools: READ_ONLY_TOOLS,
+      sandbox: 'read-only'
+    });
+    const args = buildHeadlessArgs('task', options);
+    assert.ok(args.includes(READ_ONLY_TOOLS));
+    assert.ok(args.includes('read-only'));
+    assert.equal(args.includes('--always-approve'), false);
+  }
+
+  const writeRescue = headlessModeOptions('rescue');
+  assert.deepEqual(writeRescue, {
+    sandbox: WRITE_SANDBOX,
+    alwaysApprove: true
+  });
+  const writeArgs = buildHeadlessArgs('fix it', writeRescue);
+  assert.ok(writeArgs.includes('--sandbox'));
+  assert.ok(writeArgs.includes(WRITE_SANDBOX));
+  assert.ok(writeArgs.includes('--always-approve'));
+  assert.equal(writeArgs.includes('--tools'), false);
+
+  const readonlyRescue = headlessModeOptions('rescue', { write: false });
+  assert.deepEqual(readonlyRescue, {
+    tools: READ_ONLY_TOOLS,
+    sandbox: 'read-only'
+  });
 });

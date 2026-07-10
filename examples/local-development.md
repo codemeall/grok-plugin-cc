@@ -17,11 +17,16 @@ Run:
 
 ```text
 /grok:setup
-/grok:review --base main
-/grok:rescue investigate failing login test --background
+/grok:review --base main --effort medium
+/grok:adversarial-review --base main challenge caching design
+/grok:rescue fix failing login test --background
+/grok:rescue diagnose flaky test --readonly
 /grok:status
 /grok:result grok-...
 ```
+
+- Reviews are read-only.
+- Rescue writes by default (`--sandbox workspace --always-approve`); pass `--readonly` to propose only.
 
 For marketplace testing from a local clone:
 

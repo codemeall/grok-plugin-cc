@@ -7,6 +7,12 @@ import { commandExists, run } from './process.mjs';
 /** Soft argv budget before switching to --prompt-file (bytes). */
 export const ARG_MAX_SAFE = 80_000;
 
+/** Read-only Grok Build tool allowlist for review modes and `--readonly` rescue. */
+export const READ_ONLY_TOOLS = 'read_file,grep,list_dir';
+
+/** Workspace sandbox profile for write-capable rescue (Grok Build). */
+export const WRITE_SANDBOX = 'workspace';
+
 export function configuredGrokCommand() {
   return process.env.GROK_PLUGIN_GROK_COMMAND || process.env.GROK_CLI || 'grok';
 }
@@ -51,6 +57,29 @@ export function detectGrok() {
 }
 
 /**
+ * Headless tool/sandbox policy by mode.
+ * Reviews are always read-only. Rescue defaults to write-capable (like Codex
+ * `/codex:rescue --write`): workspace sandbox + --always-approve so Grok can
+ * edit files and run commands unattended. Pass `{ write: false }` / `--readonly`
+ * for proposal-only rescue.
+ */
+export function headlessModeOptions(mode, options = {}) {
+  const write = mode === 'rescue' && options.write !== false;
+
+  if (write) {
+    return {
+      sandbox: WRITE_SANDBOX,
+      alwaysApprove: true
+    };
+  }
+
+  return {
+    tools: READ_ONLY_TOOLS,
+    sandbox: 'read-only'
+  };
+}
+
+/**
  * Build argv for official Grok Build headless mode.
  * Prefer `--prompt-file` for long prompts; use `-p` for short ones.
  * @see https://docs.x.ai/build/cli/headless-scripting
@@ -64,6 +93,14 @@ export function buildHeadlessArgs(prompt, options = {}) {
 
   if (options.model) {
     args.push('-m', options.model);
+  }
+
+  if (options.effort) {
+    args.push('--effort', options.effort);
+  }
+
+  if (options.sandbox) {
+    args.push('--sandbox', options.sandbox);
   }
 
   if (options.sessionId) {

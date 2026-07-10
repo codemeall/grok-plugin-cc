@@ -7,4 +7,4 @@ allowed-tools: Bash
 
 # Grok Status
 
-!`grok-companion status`
+!`"${CLAUDE_PLUGIN_ROOT}/bin/grok-companion" status`

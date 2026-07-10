@@ -1,9 +1,10 @@
-const VALUE_FLAGS = new Set(['--base', '--job', '--model']);
+const VALUE_FLAGS = new Set(['--base', '--job', '--model', '--effort']);
 const BOOLEAN_FLAGS = new Set([
   '--background',
   '--wait',
   '--resume',
   '--fresh',
+  '--readonly',
   '--help',
   '--stdin-args'
 ]);
@@ -50,9 +51,9 @@ export function usage() {
   return [
     'Usage:',
     '  grok-companion.mjs setup',
-    '  grok-companion.mjs review [--base main] [--background] [--wait] [--model <id>]',
-    '  grok-companion.mjs adversarial-review [--base main] [--background] [--wait] [--model <id>]',
-    '  grok-companion.mjs rescue <task> [--background] [--resume] [--fresh] [--wait] [--model <id>]',
+    '  grok-companion.mjs review [--base main] [--background] [--wait] [--model <id>] [--effort <level>]',
+    '  grok-companion.mjs adversarial-review [--base main] [--background] [--wait] [--model <id>] [--effort <level>] [focus text]',
+    '  grok-companion.mjs rescue <task> [--background] [--resume] [--fresh] [--wait] [--readonly] [--model <id>] [--effort <level>]',
     '  grok-companion.mjs status',
     '  grok-companion.mjs result <job-id>',
     '  grok-companion.mjs cancel <job-id>'
