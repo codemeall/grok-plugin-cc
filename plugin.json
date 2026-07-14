@@ -1,6 +1,6 @@
 {
   "name": "grok-plugin-cc",
   "description": "Compatibility metadata for the Grok Claude Code plugin marketplace repository. The installable Claude Code plugin lives at plugins/grok/.claude-plugin/plugin.json.",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "plugin": "plugins/grok"
 }

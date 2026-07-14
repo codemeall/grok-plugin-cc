@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.3
+
+- Fix Claude Code auto-mode denials by replacing blanket Bash grants with narrow permissions for each `grok-companion` subcommand.
+- Run the companion as a plugin-provided `bin/` command after slash-command expansion instead of using the obsolete executable code-fence form.
+
 ## 0.2.2
 
 - Rescue is write-capable by default (`--sandbox workspace --always-approve`), matching Codex rescue `--write`.

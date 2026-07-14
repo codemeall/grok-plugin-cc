@@ -38,6 +38,13 @@ After installing, reload Claude Code plugins:
 
 If plugin reload is not available, restart Claude Code.
 
+If the plugin is already installed, update it before reloading:
+
+```text
+/plugin update grok@grok-plugin-cc
+/reload-plugins
+```
+
 ## Verify Setup
 
 Run:

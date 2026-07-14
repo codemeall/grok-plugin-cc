@@ -1,7 +1,7 @@
 {
   "name": "grok",
   "description": "Delegate repository-aware review and implementation tasks to a local Grok Build CLI while Claude Code remains the orchestrator.",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "author": {
     "name": "grok-plugin-cc contributors"
   },

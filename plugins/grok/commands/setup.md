@@ -2,11 +2,13 @@
 description: Check Grok plugin setup, local Grok CLI availability, authentication, Node.js, Git, and repository status.
 argument-hint: ""
 disable-model-invocation: true
-allowed-tools: Bash
+allowed-tools: Bash(grok-companion setup)
 ---
 
 # Grok Setup
 
-Run this command and report the status exactly. Do not invent install links.
+The user explicitly invoked this plugin command. Run `grok-companion setup` once through Bash and report its status exactly. Do not invent install links.
 
-!`"${CLAUDE_PLUGIN_ROOT}/bin/grok-companion" setup`
+```bash
+grok-companion setup
+```

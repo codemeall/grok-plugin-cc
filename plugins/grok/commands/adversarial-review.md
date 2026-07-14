@@ -2,15 +2,15 @@
 description: Ask Grok to challenge architecture, tradeoffs, reliability, scalability, security, and hidden assumptions.
 argument-hint: "[--base main] [--background] [--wait] [--model <id>] [--effort <level>] [focus text]"
 disable-model-invocation: true
-allowed-tools: Bash Read Grep Glob
+allowed-tools: Bash(grok-companion adversarial-review:*) Read Grep Glob
 ---
 
 # Grok Adversarial Review
 
-Run the companion in read-only adversarial review mode. Do not modify files. Optional focus text after flags steers the critique (for example: `challenge caching and retry design`).
+Run the companion in read-only adversarial review mode. Do not modify files. Optional focus text after flags steers the critique (for example: `challenge caching and retry design`). The user explicitly invoked this plugin command, so run the bundled `grok-companion adversarial-review` command once through Bash with their raw arguments:
 
-```!
-"${CLAUDE_PLUGIN_ROOT}/bin/grok-companion" adversarial-review --stdin-args <<'GROK_PLUGIN_ARGS'
+```bash
+grok-companion adversarial-review --stdin-args <<'GROK_PLUGIN_ARGS'
 $ARGUMENTS
 GROK_PLUGIN_ARGS
 ```
