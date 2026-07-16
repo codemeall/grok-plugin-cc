@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.3.0
+
+- **Fix critical `--stdin-args` regression:** the flag was stored under the raw key `stdin-args` while the companion checked `stdinArgs`, so every slash command silently dropped `$ARGUMENTS` (e.g. `/grok:rescue <task>` failed with "rescue requires a task"). Flag keys are now camelCased, matching the cursor-plugin-cc 0.1.1 fix.
+- **Changed exit-code contract:** the companion now exits `2` when the Grok run itself fails, is unavailable, or a `--wait` times out (previously always `0`; `1` remains usage/internal error). Orchestrators can rely on exit status instead of scraping `Succeeded:` from stdout. Background dispatch, `status`, and `result` still exit `0`.
+- Validate `--effort` early against the documented levels (`none, minimal, low, medium, high, xhigh, max`) instead of failing late inside the Grok CLI.
+- Add `--` end-of-flags separator: task text containing `--`-prefixed tokens no longer crashes the parser; the unknown-flag error suggests it.
+
 ## 0.2.3
 
 - Fix Claude Code auto-mode denials by replacing blanket Bash grants with narrow permissions for each `grok-companion` subcommand.

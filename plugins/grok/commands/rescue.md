@@ -17,4 +17,4 @@ $ARGUMENTS
 GROK_PLUGIN_ARGS
 ```
 
-After Grok returns, review what changed (or the proposed patch) before presenting it as final. Preserve unrelated user changes.
+After Grok returns, review what changed (or the proposed patch) before presenting it as final. Preserve unrelated user changes. If the task text itself contains `--`-prefixed tokens, put it after a literal `--` separator (for example `rescue -- explain the --force flag`).

@@ -24,11 +24,12 @@ function companionEnv(overrides = {}) {
   return env;
 }
 
-function runCompanion(args, env) {
+function runCompanion(args, env, input) {
   return spawnSync(process.execPath, [COMPANION, ...args], {
     encoding: 'utf8',
     cwd: join(__dirname, '..'),
-    env
+    env,
+    input
   });
 }
 
@@ -85,4 +86,56 @@ test('companion review runs through fake grok', () => {
 
   assert.equal(result.status, 0, result.stderr || result.stdout);
   assert.match(result.stdout, /Grok Output|Fake Grok response/);
+});
+
+test('a failed Grok run exits 2 and reports Succeeded: no', () => {
+  const binDir = mkdtempSync(join(tmpdir(), 'grok-plugin-bin-'));
+  installFakeGrok(binDir);
+
+  const result = runCompanion(
+    ['rescue', 'break', 'on', 'purpose'],
+    companionEnv({
+      PATH: `${binDir}:${process.env.PATH}`,
+      XAI_API_KEY: 'test',
+      FAKE_GROK_BEHAVIOR: 'fail'
+    })
+  );
+
+  assert.equal(result.status, 2, result.stderr || result.stdout);
+  assert.match(result.stdout, /Succeeded: no/);
+});
+
+test('rescue receives its task through --stdin-args', () => {
+  // Regression: the stdin-args flag key mismatch made slash commands drop $ARGUMENTS.
+  const binDir = mkdtempSync(join(tmpdir(), 'grok-plugin-bin-'));
+  installFakeGrok(binDir);
+
+  const result = runCompanion(
+    ['rescue', '--stdin-args'],
+    companionEnv({
+      PATH: `${binDir}:${process.env.PATH}`,
+      XAI_API_KEY: 'test'
+    }),
+    'fix the failing login tests\n'
+  );
+
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /Grok Output|Fake Grok response/);
+  assert.doesNotMatch(result.stderr, /rescue requires a task/);
+});
+
+test('task text after -- may contain flag-like tokens', () => {
+  const binDir = mkdtempSync(join(tmpdir(), 'grok-plugin-bin-'));
+  installFakeGrok(binDir);
+
+  const result = runCompanion(
+    ['rescue', '--', 'explain', 'the', '--force', 'flag'],
+    companionEnv({
+      PATH: `${binDir}:${process.env.PATH}`,
+      XAI_API_KEY: 'test'
+    })
+  );
+
+  assert.equal(result.status, 0, result.stderr || result.stdout);
+  assert.match(result.stdout, /Succeeded: yes/);
 });

@@ -9,6 +9,12 @@ const BOOLEAN_FLAGS = new Set([
   '--stdin-args'
 ]);
 
+export const VALID_EFFORTS = ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'];
+
+// `--stdin-args` must become `flags.stdinArgs`, matching the companion's lookup.
+const flagKey = (token) =>
+  token.slice(2).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+
 export function parseArgs(argv) {
   const [command, ...rest] = argv;
   const flags = {};
@@ -17,26 +23,38 @@ export function parseArgs(argv) {
   for (let index = 0; index < rest.length; index += 1) {
     const token = rest[index];
 
+    if (token === '--') {
+      // End of flags: everything after a literal `--` is task text.
+      positionals.push(...rest.slice(index + 1));
+      break;
+    }
+
     if (VALUE_FLAGS.has(token)) {
       const value = rest[index + 1];
       if (!value || value.startsWith('--')) {
         throw new Error(`${token} requires a value`);
       }
-      flags[token.slice(2)] = value;
+      flags[flagKey(token)] = value;
       index += 1;
       continue;
     }
 
     if (BOOLEAN_FLAGS.has(token)) {
-      flags[token.slice(2)] = true;
+      flags[flagKey(token)] = true;
       continue;
     }
 
     if (token.startsWith('--')) {
-      throw new Error(`Unknown flag: ${token}`);
+      throw new Error(
+        `Unknown flag: ${token}. If this token is part of the task text, put it after a literal -- separator.`
+      );
     }
 
     positionals.push(token);
+  }
+
+  if (flags.effort && !VALID_EFFORTS.includes(flags.effort)) {
+    throw new Error(`Unsupported --effort "${flags.effort}". Use one of: ${VALID_EFFORTS.join(', ')}.`);
   }
 
   return {
@@ -56,7 +74,11 @@ export function usage() {
     '  grok-companion.mjs rescue <task> [--background] [--resume] [--fresh] [--wait] [--readonly] [--model <id>] [--effort <level>]',
     '  grok-companion.mjs status',
     '  grok-companion.mjs result <job-id>',
-    '  grok-companion.mjs cancel <job-id>'
+    '  grok-companion.mjs cancel <job-id>',
+    '',
+    'A literal -- ends flag parsing; everything after it is task text.',
+    `Efforts: ${VALID_EFFORTS.join(', ')}.`,
+    'Exit codes: 0 success, 1 usage/internal error, 2 the Grok run failed, was unavailable, or timed out.'
   ].join('\n');
 }
 

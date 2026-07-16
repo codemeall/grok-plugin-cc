@@ -24,6 +24,15 @@ const SCRIPT_PATH = fileURLToPath(import.meta.url);
 const PLUGIN_ROOT = resolve(dirname(SCRIPT_PATH), '..');
 const MARKETPLACE_ROOT = resolve(PLUGIN_ROOT, '..', '..');
 
+// Exit code contract: 0 = success, 1 = usage/internal error, 2 = the Grok run
+// itself failed, was unavailable, or timed out. Background dispatch, status, and
+// result retrieval stay 0; job state lives in job.json.
+const EXIT_RUN_FAILED = 2;
+
+function markRunFailed() {
+  process.exitCode = EXIT_RUN_FAILED;
+}
+
 async function main() {
   let parsed = parseArgs(process.argv.slice(2));
   if (parsed.flags.stdinArgs) {
@@ -111,6 +120,7 @@ async function runMode(mode, parsed) {
   const base = parsed.flags.base || 'main';
   const context = gatherRepositoryContext({ base });
   if (!context.repo.ok) {
+    markRunFailed();
     return [
       '# Grok execution unavailable',
       '',
@@ -131,6 +141,7 @@ async function runMode(mode, parsed) {
   if (parsed.flags.background) {
     const grok = detectGrok();
     if (!grok.ok) {
+      markRunFailed();
       return [
         '# Grok execution unavailable',
         '',
@@ -170,6 +181,7 @@ async function runMode(mode, parsed) {
 
   const grok = detectGrok();
   if (!grok.ok) {
+    markRunFailed();
     return [
       '# Grok execution unavailable',
       '',
@@ -186,6 +198,7 @@ async function runMode(mode, parsed) {
     effort: parsed.flags.effort,
     ...headlessModeOptions(mode, { write })
   });
+  if (!response.ok) markRunFailed();
   const patch = extractPatch(response.output);
   return renderExecutionResult(response.output, patch, response);
 }
@@ -305,10 +318,12 @@ async function waitForJob(jobId) {
   while (Date.now() < deadline) {
     const job = await readJob(jobId);
     if (['completed', 'failed', 'cancelled'].includes(job.status)) {
+      if (job.status !== 'completed') markRunFailed();
       return await result(jobId);
     }
     await new Promise((resolve) => setTimeout(resolve, 1500));
   }
+  markRunFailed();
   return `Timed out waiting for ${jobId}. Use /grok:status and /grok:result ${jobId}.`;
 }
 
